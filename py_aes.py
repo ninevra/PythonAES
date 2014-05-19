@@ -198,28 +198,22 @@ def add_round_key(state, key):
 def aes_inv_cipher(cipher_block, key):
     """Return the plaintext version of CIPHER_BLOCK, using KEY, by the simple 
     inverse cipher.
-
     >>> key = (43, 126, 21, 22, 40, 174, 210, 166, 171, 247, 21, 136, 9, 207, 79, 60)
     >>> ct = bytes.fromhex('39 25 84 1d 02 dc 09 fb dc 11 85 97 19 6a 0b 32')
     >>> wdhex(aes_inv_cipher(ct, key))
     '32 43 f6 a8 88 5a 30 8d 31 31 98 a2 e0 37 07 34'"""
     key_len = len(key) // 4
     num_rounds = key_len + 6
-
     key_schedule = key_expand(key)
-
     state = add_round_key(cipher_block, round_key(key_schedule, num_rounds))
-
     for rd in range(num_rounds - 1, 0, -1):
         state = inv_shift_rows(state)
         state = inv_sub_bytes(state)
         state = add_round_key(state, round_key(key_schedule, rd))
         state = inv_mix_columns(state)
-
     state = inv_shift_rows(state)
     state = inv_sub_bytes(state)
     state = add_round_key(state, round_key(key_schedule, 0))
-
     return state
 
 def inv_shift_rows(state):
@@ -252,26 +246,20 @@ def wdshex(wds):
 def aes_eq_inv_cipher(cipher_block, key):
     """Return the plaintext corresponding to CIPHER_BLOCK, using KEY, by the 
     equivalent inverse cipher.
-
     >>> key = (43, 126, 21, 22, 40, 174, 210, 166, 171, 247, 21, 136, 9, 207, 79, 60)
     >>> ct = bytes.fromhex('39 25 84 1d 02 dc 09 fb dc 11 85 97 19 6a 0b 32')
     >>> wdhex(aes_inv_cipher(ct, key))
     '32 43 f6 a8 88 5a 30 8d 31 31 98 a2 e0 37 07 34'"""
     key_len = len(key) // 4
     num_rounds = key_len + 6
-
     key_schedule = [word_mul(wd, _inv_col_mixin) for wd in key_expand(key)]
-
     state = add_round_key(cipher_block, round_key(key_schedule, num_rounds))
-
     for rd in range(num_rounds - 1, 0, -1):
         state = inv_sub_bytes(state)
         state = inv_shift_rows(state)
         state = inv_mix_columns(state)
         state = add_round_key(state, round_key(key_schedule, rd))
-
     state = inv_sub_bytes(state)
     state = inv_shift_rows(state)
     state = add_round_key(state, round_key(key_schedule, 0))
-
     return state
