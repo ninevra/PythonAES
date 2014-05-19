@@ -42,7 +42,7 @@ def word_add(a, b):
     """Returns the sum of four-byte words A and B by letting each word 
     represent a polynomial of degree 3 with coefficients in GF(2^8). A and B 
     should be sequences of bytes."""
-    return bytes(ai ^ bi for (ai, bi) in zip(a, b))
+    return list(ai ^ bi for (ai, bi) in zip(a, b))
 
 def word_mul(a, b):
     """Returns the product of four-byte words A and B mod x^4 + 1, 
@@ -148,7 +148,12 @@ def round_key(key_schedule, rd):
     return key_schedule[rd * _block_size : (rd + 1) * _block_size]
 
 def aes_cipher(plain_block, key):
-    """Returns the ciphertext version of PLAIN_BLOCK, using KEY."""
+    """Returns the ciphertext version of PLAIN_BLOCK, using KEY.
+
+    >>> key = (43, 126, 21, 22, 40, 174, 210, 166, 171, 247, 21, 136, 9, 207, 79, 60)
+    >>> pt = bytes.fromhex('32 43 f6 a8 88 5a 30 8d 31 31 98 a2 e0 37 07 34')
+    >>> wdhex(aes_cipher(pt, key))
+    '39 25 84 1d 02 dc 09 fb dc 11 85 97 19 6a 0b 32'"""
     key_len = len(key) // 4
     num_rounds = key_len + 6
     key_schedule = key_expand(key)
@@ -172,7 +177,7 @@ def shift_rows(state):
     """Treating the 1D input array as a 4x4 column-major array, returns the 
     result of rotating each row to the left a number of places equal to its 
     index."""
-    ret = state[:]
+    ret = list(state)
     for i in range(1, 4):
         ret[i::4] = rot_word(ret[i::4], i)
     return ret
@@ -192,7 +197,12 @@ def add_round_key(state, key):
 
 def aes_inv_cipher(cipher_block, key):
     """Return the plaintext version of CIPHER_BLOCK, using KEY, by the simple 
-    inverse cipher."""
+    inverse cipher.
+
+    >>> key = (43, 126, 21, 22, 40, 174, 210, 166, 171, 247, 21, 136, 9, 207, 79, 60)
+    >>> ct = bytes.fromhex('39 25 84 1d 02 dc 09 fb dc 11 85 97 19 6a 0b 32')
+    >>> wdhex(aes_inv_cipher(ct, key))
+    '32 43 f6 a8 88 5a 30 8d 31 31 98 a2 e0 37 07 34'"""
     key_len = len(key) // 4
     num_rounds = key_len + 6
 
@@ -215,7 +225,7 @@ def aes_inv_cipher(cipher_block, key):
 def inv_shift_rows(state):
     """Treating the 1D array STATE as a 4x4 column-major array, return the 
     result of right-shifting each row by an amount equal to its index."""
-    ret = state[:]
+    ret = list(state)
     for i in range(1, 4):
         ret[i::4] = rot_word(ret[i::4], 4 - i)
     return ret
@@ -231,4 +241,10 @@ def inv_mix_columns(state):
     """Treating the 1D array STATE as a 4x4 column-major array, return the 
     result of multiplying each column by the inverse of the column mixin."""
     return word_mul(state[:4], _inv_col_mixin) + word_mul(state[4:8], _inv_col_mixin) + \
-        word_mul(state[8:12], _inv_col_mixin) + word_mul(state[:16], _inv_col_mixin)
+        word_mul(state[8:12], _inv_col_mixin) + word_mul(state[12:], _inv_col_mixin)
+
+def wdhex(wd):
+    return ' '.join(hex(i)[2:].rjust(2,'0') for i in wd)
+
+def wdshex(wds):
+    return ' '.join(wdhex(wd) for wd in wds)
