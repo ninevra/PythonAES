@@ -190,13 +190,15 @@ def add_round_key(state, key):
     return word_add(state[:4], key[0]) + word_add(state[4:8], key[1]) + \
         word_add(state[8:12], key[2]) + word_add(state[12:], key[3])
 
-def aes_inv_cipher(ct, key):
+def aes_inv_cipher(cipher_block, key):
+    """Return the plaintext version of CIPHER_BLOCK, using KEY, by the simple 
+    inverse cipher."""
     key_len = len(key) // 4
     num_rounds = key_len + 6
 
     key_schedule = key_expand(key)
 
-    state = add_round_key(plain_block, round_key(key_schedule, num_rounds))
+    state = add_round_key(cipher_block, round_key(key_schedule, num_rounds))
 
     for rd in range(num_rounds - 1, 0, -1):
         state = inv_shift_rows(state)
@@ -209,3 +211,11 @@ def aes_inv_cipher(ct, key):
     state = add_round_key(state, round_key(key_schedule, 0))
 
     return state
+
+def inv_shift_rows(state):
+    """Treating the 1D array STATE as a 4x4 column-major array, return the 
+    result of right-shifting each row by an amount equal to its index."""
+    ret = state[:]
+    for i in range(1, 4):
+        ret[i::4] = rot_word(ret[i::4], 4 - i)
+    return ret
