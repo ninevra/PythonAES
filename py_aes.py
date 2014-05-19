@@ -137,3 +137,26 @@ def rot_word(word):
     >>> rot_word((1,2,4,8))
     (2, 4, 8, 1)"""
     return word_mul(word, (0,0,0,1))
+
+def round_key(key_schedule, rd):
+    return key_schedule[rd * _block_size : (rd + 1) * _block_size]
+
+def aes_encrypt(plain_block, key):
+    key_len = len(key) // 4
+    num_rounds = key_len + 6
+
+    key_schedule = key_expand(key)
+
+    state = add_round_key(plain_block, round_key(key_schedule, 0))
+
+    for rd in range(1, num_rounds):
+        state = sub_bytes(state)
+        state = shift_rows(state)
+        state = mix_columns(state)
+        state = add_round_key(state, round_keys(key_schedule, rd))
+
+    state = sub_bytes(state)
+    state = shift_rows(state)
+    state = add_round_key(state, round_keys(key_schedule, num_rounds))
+
+    return state
