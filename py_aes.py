@@ -64,3 +64,5 @@ def word_mul(a, b):
                 byte_mul(a[0], b[2]) ^ byte_mul(a[3], b[3]),
             byte_mul(a[3], b[0]) ^ byte_mul(a[2], b[1]) ^
                 byte_mul(a[1], b[2]) ^ byte_mul(a[0], b[3]))
+
+_block_size = 4 # words per block of ciphertext or plaintext
