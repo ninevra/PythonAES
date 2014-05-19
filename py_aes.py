@@ -147,7 +147,7 @@ def rot_word(word, n=1):
 def round_key(key_schedule, rd):
     return key_schedule[rd * _block_size : (rd + 1) * _block_size]
 
-def aes_encrypt(plain_block, key):
+def aes_cipher(plain_block, key):
     """Returns the ciphertext version of PLAIN_BLOCK, using KEY."""
     key_len = len(key) // 4
     num_rounds = key_len + 6
@@ -194,3 +194,5 @@ def add_round_key(state, key):
     """Return the result of pointwise adding KEY to STATE"""
     return word_add(state[:4], key[0]) + word_add(state[4:8], key[1]) + \
         word_add(state[8:12], key[2]) + word_add(state[12:], key[3])
+
+def aes_decrypt()
