@@ -1,6 +1,6 @@
 """
-Algorithm and test cases from FIPS Publication 197, Specification for the 
-Advanced Encryption Standard (AES), 
+Algorithm, data and test cases from FIPS Publication 197, Specification for 
+the Advanced Encryption Standard (AES), 
 http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
 """
 
