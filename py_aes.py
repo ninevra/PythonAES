@@ -219,3 +219,8 @@ def inv_shift_rows(state):
     for i in range(1, 4):
         ret[i::4] = rot_word(ret[i::4], 4 - i)
     return ret
+
+def inv_sub_bytes(state):
+    """Return the result of applying the inverse S-box to each byte of STATE.
+    """
+    return [_inv_s_box[i] for i in state]
