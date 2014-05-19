@@ -160,26 +160,26 @@ def aes_encrypt(plain_block, key):
         state = sub_bytes(state)
         state = shift_rows(state)
         state = mix_columns(state)
-        state = add_round_key(state, round_keys(key_schedule, rd))
+        state = add_round_key(state, round_key(key_schedule, rd))
 
     state = sub_bytes(state)
     state = shift_rows(state)
-    state = add_round_key(state, round_keys(key_schedule, num_rounds))
+    state = add_round_key(state, round_key(key_schedule, num_rounds))
 
     return state
 
 def sub_bytes(state):
     """Returns the result of substituing each byte in the 1D array STATE 
     with the corresponding S-box value."""
-    return [_s_box(i) for i in state]
+    return [_s_box[i] for i in state]
 
 def shift_rows(state):
     """Treating the 1D input array as a 4x4 column-major array, returns the 
     result of rotating each row to the left a number of places equal to its 
     index."""
-    ret = [0] * 16
+    ret = state[:]
     for i in range(1, 4):
-        ret[i::4] = rot_word(state[i::4], i)
+        ret[i::4] = rot_word(ret[i::4], i)
     return ret
 
 _col_mixin = (2, 1, 1, 3)
@@ -189,3 +189,8 @@ def mix_columns(state):
     result of multiplying each column by _COL_MIXIN."""
     return word_mul(state[:4], _col_mixin) + word_mul(state[4:8], _col_mixin) \
         + word_mul(state[8:12], _col_mixin) + word_mul(state[12:16], _col_mixin)
+
+def add_round_key(state, key):
+    """Return the result of pointwise adding KEY to STATE"""
+    return word_add(state[:4], key[0]) + word_add(state[4:8], key[1]) + \
+        word_add(state[8:12], key[2]) + word_add(state[12:], key[3])
