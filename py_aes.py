@@ -42,7 +42,7 @@ def word_add(a, b):
     """Returns the sum of four-byte words A and B by letting each word 
     represent a polynomial of degree 3 with coefficients in GF(2^8). A and B 
     should be sequences of bytes."""
-    return bytes(ai ^ bi for ai in a for bi in b)
+    return bytes(ai ^ bi for (ai, bi) in zip(a, b))
 
 def word_mul(a, b):
     """Returns the product of four-byte words A and B mod x^4 + 1, 
@@ -105,9 +105,35 @@ _inv_s_box = [
 0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
 ]
 
-def key_expand(key, num_rounds):
+def rcon_gen():
+    rcon = [1,0,0,0]
+    while True:
+        yield rcon
+        rcon[0] = byte_mulx(rcon[0])
+
+def key_expand(key):
     """Takes the encryption KEY as a sequence of bytes and returns a key 
-    schedule as a sequence of _BLOCK_SIZE * (NUM_ROUNDS + 1) words.
+    schedule as a sequence of _BLOCK_SIZE * (num_rounds + 1) words.
     """
     key_len = len(key) // 4 # words in the key
+    num_rounds = key_len + 6
     schedule = [key[4*i:4*(i+1)] for i in range(key_len)]
+    rcon = rcon_gen()
+    while len(schedule) < _block_size * (num_rounds + 1):
+        temp = schedule[-1]
+        if len(schedule) % key_len == 0:
+            temp = word_add(sub_word(rot_word(temp)), next(rcon))
+        elif key_len == 8 and len(schedule) % key_len == 4:
+            temp = sub_word(temp)
+        schedule.append(word_add(schedule[-key_len], temp))
+    return schedule
+
+def sub_word(word):
+    """Returns the result of applying the S-box to each byte of WORD."""
+    return [_s_box[i] for i in word]
+
+def rot_word(word):
+    """Returns the result of rotating WORD one place to the left.
+    >>> rot_word((1,2,4,8))
+    (2, 4, 8, 1)"""
+    return word_mul(word, (0,0,0,1))
