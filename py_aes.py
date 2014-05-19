@@ -132,16 +132,23 @@ def sub_word(word):
     """Returns the result of applying the S-box to each byte of WORD."""
     return [_s_box[i] for i in word]
 
-def rot_word(word):
-    """Returns the result of rotating WORD one place to the left.
+_rotators = ((0,0,0,1), (0,0,1,0), (0,1,0,0))
+
+def rot_word(word, n=1):
+    """Returns the result of rotating WORD N places to the left.
     >>> rot_word((1,2,4,8))
-    (2, 4, 8, 1)"""
-    return word_mul(word, (0,0,0,1))
+    (2, 4, 8, 1)
+    >>> rot_word((1,2,4,8), 2)
+    (4, 8, 1, 2)
+    >>> rot_word((1,2,4,8), 3)
+    (8, 1, 2, 4)"""
+    return word_mul(word, _rotators[(n % 4) - 1])
 
 def round_key(key_schedule, rd):
     return key_schedule[rd * _block_size : (rd + 1) * _block_size]
 
 def aes_encrypt(plain_block, key):
+    """Returns the ciphertext version of PLAIN_BLOCK, using KEY."""
     key_len = len(key) // 4
     num_rounds = key_len + 6
 
@@ -160,3 +167,15 @@ def aes_encrypt(plain_block, key):
     state = add_round_key(state, round_keys(key_schedule, num_rounds))
 
     return state
+
+def sub_bytes(state):
+    """Returns the result of substituing each byte in the 1D array STATE 
+    with the corresponding S-box value."""
+    return [_s_box(i) for i in state]
+
+def shift_rows(state):
+    """Treating the 1D input array as a 4x4 column-major array, returns the 
+    result of rotating each row to the left a number of places equal to its 
+    index."""
+    return state[:4] + rot_word(state[4:8]) + rot_word(state[8:12], 2) + \
+        rot_word(state[12:16], 3)
