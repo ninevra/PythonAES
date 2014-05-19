@@ -224,3 +224,11 @@ def inv_sub_bytes(state):
     """Return the result of applying the inverse S-box to each byte of STATE.
     """
     return [_inv_s_box[i] for i in state]
+
+_inv_col_mixin = (0x0e, 9, 0x0d, 0x0b)
+
+def inv_mix_columns(state):
+    """Treating the 1D array STATE as a 4x4 column-major array, return the 
+    result of multiplying each column by the inverse of the column mixin."""
+    return word_mul(state[:4], _inv_col_mixin) + word_mul(state[4:8], _inv_col_mixin) + \
+        word_mul(state[8:12], _inv_col_mixin) + word_mul(state[:16], _inv_col_mixin)
