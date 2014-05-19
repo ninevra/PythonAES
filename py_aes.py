@@ -177,5 +177,15 @@ def shift_rows(state):
     """Treating the 1D input array as a 4x4 column-major array, returns the 
     result of rotating each row to the left a number of places equal to its 
     index."""
-    return state[:4] + rot_word(state[4:8]) + rot_word(state[8:12], 2) + \
-        rot_word(state[12:16], 3)
+    ret = [0] * 16
+    for i in range(1, 4):
+        ret[i::4] = rot_word(state[i::4], i)
+    return ret
+
+_col_mixin = (2, 1, 1, 3)
+
+def mix_columns(state):
+    """Treating the 1D input array as a 4x4 column-major array, returns the 
+    result of multiplying each column by _COL_MIXIN."""
+    return word_mul(state[:4], _col_mixin) + word_mul(state[4:8], _col_mixin) \
+        + word_mul(state[8:12], _col_mixin) + word_mul(state[12:16], _col_mixin)
