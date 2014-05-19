@@ -139,8 +139,14 @@ def rot_word(word, n=1):
     (8, 1, 2, 4)"""
     return word_mul(word, _rotators[(n % 4) - 1])
 
+def join_wds(wds):
+    ret = []
+    for wd in wds:
+        ret.extend(wd)
+    return ret
+
 def round_key(key_schedule, rd):
-    return key_schedule[rd * _block_size : (rd + 1) * _block_size]
+    return join_wds(key_schedule[rd * _block_size : (rd + 1) * _block_size])
 
 def aes_cipher(plain_block, key):
     """Returns the ciphertext version of PLAIN_BLOCK, using KEY.
@@ -187,8 +193,8 @@ def mix_columns(state):
 
 def add_round_key(state, key):
     """Return the result of pointwise adding KEY to STATE"""
-    return xor_bytes(state[:4], key[0]) + xor_bytes(state[4:8], key[1]) + \
-        xor_bytes(state[8:12], key[2]) + xor_bytes(state[12:], key[3])
+    return xor_bytes(state[:4], key[:4]) + xor_bytes(state[4:8], key[4:8]) + \
+        xor_bytes(state[8:12], key[8:12]) + xor_bytes(state[12:], key[12:])
 
 def aes_inv_cipher(cipher_block, key):
     """Return the plaintext version of CIPHER_BLOCK, using KEY, by the simple 
@@ -247,13 +253,13 @@ def aes_eq_inv_cipher(cipher_block, key):
     '32 43 f6 a8 88 5a 30 8d 31 31 98 a2 e0 37 07 34'"""
     key_len = len(key) // 4
     num_rounds = key_len + 6
-    key_schedule = [word_mul(wd, _inv_col_mixin) for wd in key_expand(key)]
+    key_schedule = key_expand(key)
     state = add_round_key(cipher_block, round_key(key_schedule, num_rounds))
     for rd in range(num_rounds - 1, 0, -1):
         state = inv_sub_bytes(state)
         state = inv_shift_rows(state)
         state = inv_mix_columns(state)
-        state = add_round_key(state, round_key(key_schedule, rd))
+        state = add_round_key(state, inv_mix_columns(round_key(key_schedule, rd)))
     state = inv_sub_bytes(state)
     state = inv_shift_rows(state)
     state = add_round_key(state, round_key(key_schedule, 0))
@@ -264,14 +270,14 @@ def cbc_encrypt(cipher, key, iv, plaintext):
     cipher in the cipher block chaining mode with the given initialization
     vector IV."""
     ct = bytearray(cipher(xor_bytes(iv, plaintext[:16]), key))
-    for i in range(16, len(plaintext) + 1, 16):
-        ct.append(cipher(xor_bytes(ct[-16:], plaintext[i:i+16]), key))
+    for i in range(16, len(plaintext), 16):
+        ct.extend(cipher(xor_bytes(ct[-16:], plaintext[i:i+16]), key))
     return ct
 
 def cbc_decrypt(uncipher, key, iv, ciphertext):
     """Uses the deciphering method UNCIPHER, KEY, and IV to decrypt 
     CIPHERTEXT."""
     pt = bytearray(xor_bytes(uncipher(ciphertext[:16], key), iv))
-    for i in range(16, len(ciphertext) + 1, 16):
-        pt.append(xor_bytes(uncipher(ciphertext[i:i+16], key), ciphertext[i-16:i]))
+    for i in range(16, len(ciphertext), 16):
+        pt.extend(xor_bytes(uncipher(ciphertext[i:i+16], key), ciphertext[i-16:i]))
     return pt
