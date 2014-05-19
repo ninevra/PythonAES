@@ -151,21 +151,16 @@ def aes_cipher(plain_block, key):
     """Returns the ciphertext version of PLAIN_BLOCK, using KEY."""
     key_len = len(key) // 4
     num_rounds = key_len + 6
-
     key_schedule = key_expand(key)
-
     state = add_round_key(plain_block, round_key(key_schedule, 0))
-
     for rd in range(1, num_rounds):
         state = sub_bytes(state)
         state = shift_rows(state)
         state = mix_columns(state)
         state = add_round_key(state, round_key(key_schedule, rd))
-
     state = sub_bytes(state)
     state = shift_rows(state)
     state = add_round_key(state, round_key(key_schedule, num_rounds))
-
     return state
 
 def sub_bytes(state):
@@ -195,4 +190,22 @@ def add_round_key(state, key):
     return word_add(state[:4], key[0]) + word_add(state[4:8], key[1]) + \
         word_add(state[8:12], key[2]) + word_add(state[12:], key[3])
 
-def aes_decrypt()
+def aes_inv_cipher(ct, key):
+    key_len = len(key) // 4
+    num_rounds = key_len + 6
+
+    key_schedule = key_expand(key)
+
+    state = add_round_key(plain_block, round_key(key_schedule, num_rounds))
+
+    for rd in range(num_rounds - 1, 0, -1):
+        state = inv_shift_rows(state)
+        state = inv_sub_bytes(state)
+        state = add_round_key(state, round_key(key_schedule, rd))
+        state = inv_mix_columns(state)
+
+    state = inv_shift_rows(state)
+    state = inv_sub_bytes(state)
+    state = add_round_key(state, round_key(key_schedule, 0))
+
+    return state
