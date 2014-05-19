@@ -66,3 +66,11 @@ def word_mul(a, b):
                 byte_mul(a[1], b[2]) ^ byte_mul(a[0], b[3]))
 
 _block_size = 4 # words per block of ciphertext or plaintext
+
+def key_expand(key, num_rounds):
+    """Takes the encryption KEY as a sequence of bytes and returns a key 
+    schedule as a sequence of _BLOCK_SIZE * (NUM_ROUNDS + 1) words.
+    """
+    key_len = len(key) // 4 # words in the key
+    schedule = [key[4*i:4*(i+1)] for i in range(key_len)]
+    
